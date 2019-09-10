@@ -1,0 +1,136 @@
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
+    "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
+    monospace;
+}
+
+.blokus {
+  /*height: 100vh;*/
+  /*place-content:center;*/
+  /*background-color: #222222;*/
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+p {
+  margin-top: 1vmin;
+}
+
+.square {
+  background-color: white;
+  display: grid;
+  grid-template-columns: 22vmin 52vmin 22vmin;
+  grid-template-rows: 22vmin 52vmin 22vmin;
+  grid-gap: 1vmin;
+  grid-template-areas:
+      "g1 g2  g3"
+      "g4 g5  g6"
+      "g7 g8  g9"
+}
+
+.room {
+  grid-area: g1;
+}
+
+.info {
+  grid-area: g7;
+  text-align: left;
+  height: 100%;
+  overflow: auto;
+}
+
+.board {
+  grid-area: g5;
+  display: grid;
+  grid-template-columns: repeat(20, 1fr);
+  grid-template-rows: repeat(20, 1fr);
+  border: 0.1vmin solid currentColor;
+}
+
+.choose {
+  grid-area: g3;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(4, 1fr);
+  grid-gap: 1vmin;
+  grid-template-areas:
+      "cin cin cin cin"
+      ". cp cp ."
+      ". cp cp ."
+      "btn1 btn1 btn2 btn2";
+}
+
+.scoreboard {
+  grid-area: g9;
+}
+
+.player {
+  display: grid;
+  grid-gap: 0.5vmin;
+}
+
+.player1 {
+  grid-area: g2;
+  grid-template-columns: repeat(7, 7vmin);
+  grid-template-rows: repeat(3, 7vmin);
+}
+
+.player2 {
+  grid-area: g4;
+  grid-template-columns: repeat(3, 7vmin);
+  grid-template-rows: repeat(7, 7vmin);
+}
+
+.player3 {
+  grid-area: g8;
+  grid-template-columns: repeat(7, 7vmin);
+  grid-template-rows: repeat(3, 7vmin);
+}
+
+.player4 {
+  grid-area: g6;
+  grid-template-columns: repeat(3, 7vmin);
+  grid-template-rows: repeat(7, 7vmin);
+}
+
+.piece {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  grid-template-rows: repeat(5, 1fr);
+  border: 0.1vmin solid currentColor;
+}
+
+.cel {
+  place-content: center;
+  border: 0.1vmin solid currentColor;
+  /*background-color: #aaaaaa;*/
+}
+
+.cel.-hidden {
+  display: none;
+}
+
+.red {
+  background-color: #FF0000;
+}
+
+.yellow {
+  background-color: #FFaa00;
+}
+
+.blue {
+  background-color: #009999;
+}
+
+.green {
+  background-color: #00cc00;
+}
