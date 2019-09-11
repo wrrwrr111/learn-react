@@ -17,12 +17,21 @@ class SquareItem extends React.Component {
 }
 class Board extends React.Component {
   render() {
-    const boardMatrix = this.props.boardMatrix
-    const squareItems = boardMatrix.valueOf().map((row, rowIndex) => {
+    const boardData = this.props.boardData;
+    const isTemp = this.props.isTemp;
+    const squareItems = boardData.map((row, rowIndex) => {
       return row.map((col, colIndex) => {
-        return (
-          <SquareItem key={rowIndex*5+colIndex}></SquareItem>
-        )
+        if(isTemp){
+          return (
+            <div 
+            className='cel'
+            onMouseEnter={()=>this.props.tryMove(rowIndex,colIndex)}//onMouseLeave
+            key={rowIndex*5+colIndex}>
+          </div>
+          )
+        }else{
+          return <div className='cel' key={rowIndex*5+colIndex}></div>
+        }
       })
     })
     return (
@@ -83,9 +92,31 @@ class Game extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      boardMatrix: math.zeros(20, 20),
+      boardData: [  // 20x20
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      ],
+      tmpBoard:null,
       players: ['red', 'yellow', 'blue', 'green'].map((color, index) => {
-        let id = Math.random().toFixed(5)*100000+1; // TODO 
+        let id = Math.random().toFixed(5) * 100000 + 1; // TODO 
         return {
           index,
           id,
@@ -102,19 +133,21 @@ class Game extends React.Component {
       selectedPiece: null,
     }
   }
-
+  // 选中棋子 同时生成临时棋盘
   selectPiece = (piece) => {
+    const boardData = this.state.boardData;
     this.setState({
-      selectedPiece: piece
+      selectedPiece: piece,
+      tmpBoard:boardData,
     })
   }
-
+  // 逆时针旋转选中棋子
   rotatePiece = (piece) => {
     const rotation = math.pi / 2;
     const C = math.cos(rotation).toFixed();
     const S = math.sin(rotation).toFixed();
-    const originPiece = this.state.selectedPiece;
-    let rotatedPiece = Object.assign({},originPiece,{
+    const selectedPiece = this.state.selectedPiece;
+    let rotatedPiece = {...selectedPiece,
       pieceData: [
         [0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0],
@@ -122,8 +155,8 @@ class Game extends React.Component {
         [0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0]
       ],
-    });
-    originPiece.pieceData.forEach((row, rowIndex) => {
+    };
+    selectedPiece.pieceData.forEach((row, rowIndex) => {
       row.forEach((col, colIndex) => {
         if (col) {
           let [
@@ -140,7 +173,7 @@ class Game extends React.Component {
             [colIndex],
             [1]
           ])
-          rotatedPiece.pieceData[x][y] = originPiece.playerId
+          rotatedPiece.pieceData[x][y] = selectedPiece.playerId
         }
       })
     })
@@ -148,10 +181,10 @@ class Game extends React.Component {
       selectedPiece: rotatedPiece
     })
   }
-
+  // 上下翻转选中棋子
   mirrorPiece = (piece) => {
-    const originPiece = this.state.selectedPiece;
-    let rotatedPiece = Object.assign({},originPiece,{
+    const selectedPiece = this.state.selectedPiece;
+    let rotatedPiece = {...selectedPiece,
       pieceData: [
         [0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0],
@@ -159,13 +192,13 @@ class Game extends React.Component {
         [0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0]
       ],
-    });
-    originPiece.pieceData.forEach((row, rowIndex) => {
+    };
+    selectedPiece.pieceData.forEach((row, rowIndex) => {
       row.forEach((col, colIndex) => {
         if (col) {
-          let x = 4-rowIndex;
+          let x = 4 - rowIndex;
           let y = colIndex;
-          rotatedPiece.pieceData[x][y] = originPiece.playerId
+          rotatedPiece.pieceData[x][y] = selectedPiece.playerId
         }
       })
     })
@@ -173,11 +206,21 @@ class Game extends React.Component {
       selectedPiece: rotatedPiece
     })
   }
-
+  // 在临时棋盘上移动棋子
+  tryMove = (x, y) => {
+    const selectedPiece = this.state.selectedPiece;
+    console.log(x, y)
+  }
+  
+  // 返回选中棋子平移 x, y后 棋子个点坐标
+  translatePiece = (x,y) =>{
+    const selectedPiece = this.state.selectedPiece;
+  }
   render() {
     const players = this.state.players;
     const selectedPiece = this.state.selectedPiece;
-    const boardMatrix = this.state.boardMatrix;
+    const boardData = this.state.boardData;
+    const tmpBoard = this.state.tmpBoard
     const playerItems = players.map(player => {
       return (
         <PlayerItem player={player} selectPiece={this.selectPiece} key={player.id}></PlayerItem>
@@ -187,7 +230,7 @@ class Game extends React.Component {
       <div className='square'>
         {playerItems}
         {selectedPiece && <PieceItem piece={selectedPiece} isSelected={true} rotatePiece={this.rotatePiece} mirrorPiece={this.mirrorPiece}></PieceItem>}
-        <Board boardMatrix={boardMatrix}></Board>
+        <Board boardData={tmpBoard||boardData} isTemp={Boolean(tmpBoard)} tryMove={this.tryMove}></Board>
       </div>
     )
   }
