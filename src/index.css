@@ -78,30 +78,42 @@ p {
   grid-gap: 0.5vmin;
 }
 
-.player1 {
+.player_0 {
   grid-area: g2;
   grid-template-columns: repeat(7, 7vmin);
   grid-template-rows: repeat(3, 7vmin);
 }
 
-.player2 {
+.player_1 {
   grid-area: g4;
   grid-template-columns: repeat(3, 7vmin);
   grid-template-rows: repeat(7, 7vmin);
 }
 
-.player3 {
+.player_2 {
   grid-area: g8;
   grid-template-columns: repeat(7, 7vmin);
   grid-template-rows: repeat(3, 7vmin);
 }
 
-.player4 {
+.player_3 {
   grid-area: g6;
   grid-template-columns: repeat(3, 7vmin);
   grid-template-rows: repeat(7, 7vmin);
 }
 
+.selected_0 {
+  grid-area: g1;
+}
+.selected_1 {
+  grid-area: g7;
+}
+.selected_2 {
+  grid-area: g9;
+}
+.selected_3 {
+  grid-area: g3;
+}
 .piece {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
