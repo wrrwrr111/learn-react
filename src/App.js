@@ -21,7 +21,7 @@ class Board extends React.Component {
     const isTemp = this.props.isTemp;
     const squareItems = currentBoard.map((square, index) => {
       //渲染的时候跳过边界
-      if(index<21||index>441||index%21===0) return null;
+      if (index < 21 || index > 441 || index % 21 === 0) return null;
       if (isTemp) {
         return (
           <div 
@@ -93,7 +93,7 @@ class Game extends React.Component {
     this.state = {
       currentBoard: [...EMPTY_BOARD],
       tmpBoard: null,
-      isLegal: false,//当前tryMove时候合法
+      isLegal: false, //当前tryMove时候合法
       players: [1, 2, 3, 4].map((playerIndex) => {
         let playerId = Math.random().toFixed(5) * 100000 + 1; // TODO 
         return {
@@ -176,48 +176,75 @@ class Game extends React.Component {
   }
   // 在临时棋盘上移动棋子 有个备份棋子 超出范围择撤销
   tryMove = (tryIndex) => {
+    const currentBoard = [...this.state.currentBoard];
     const selectedPiece = this.state.selectedPiece;
-    const tryX = parseInt((tryIndex-21)/21);
-    const tryY = tryIndex%21-1;
-    let isLegal = true;
+    const tryX = parseInt((tryIndex - 21) / 21);
+    const tryY = tryIndex % 21 - 1;
     let tmpBoard = [...this.state.currentBoard];
-    selectedPiece.pieceData.forEach((square,squareIndex) => {
+    let rule = {
+      range: true, //是否越界内
+      side: true, //是否和自己边对边
+      angle: false, //是否角对角
+      first: false,
+    };
+    selectedPiece.pieceData.forEach((square, squareIndex) => {
       if (square) {
-        const movedX = tryX + parseInt(squareIndex / 5) -2;
-        const movedY = tryY + squareIndex % 5 -2;
-        const movedIndex = 22+movedX*21+movedY;
-        if(tmpBoard[movedIndex] === 9){//判断边界 TODO: 判断其他规则
-          isLegal = false;
+        const movedX = tryX + parseInt(squareIndex / 5) - 2;
+        const movedY = tryY + squareIndex % 5 - 2;
+        const movedIndex = 22 + movedX * 21 + movedY;
+        if (
+          currentBoard[movedIndex] === 9
+        ) { // 判断边界 
+          rule.inRange = false;
+        } else if (
+          currentBoard[movedIndex] === selectedPiece.playerIndex + 4
+        ) { // 判断是否第一个
+          rule.first = true;
+        } else if (
+          currentBoard[movedIndex - 1] === selectedPiece.playerIndex ||
+          currentBoard[movedIndex + 1] === selectedPiece.playerIndex ||
+          currentBoard[movedIndex - 21] === selectedPiece.playerIndex ||
+          currentBoard[movedIndex + 21] === selectedPiece.playerIndex
+        ) { // 判断是否同色边对边
+          rule.side = false;
+        } else if (
+          currentBoard[movedIndex - 20] === selectedPiece.playerIndex ||
+          currentBoard[movedIndex - 22] === selectedPiece.playerIndex ||
+          currentBoard[movedIndex + 20] === selectedPiece.playerIndex ||
+          currentBoard[movedIndex + 22] === selectedPiece.playerIndex
+        ) { // 判断是否同色角对角
+          rule.angle = true;
         }
         tmpBoard[movedIndex] = selectedPiece.playerIndex;
       }
     })
-    if(isLegal){//落子合法才显示
+    let isLegal = rule.range && (rule.first || (rule.side && rule.angle))
+    if (isLegal) { //落子合法才显示
       this.setState({
         tmpBoard,
-        isLegal,
+        isLegal: isLegal,
       })
     }
   }
   // 落子
-  move = () =>{
+  move = () => {
     const isLegal = this.state.isLegal;
     const tmpBoard = [...this.state.tmpBoard];
     //TODO 移除对应棋子
-    if(isLegal){
+    if (isLegal) {
       this.setState({
-        currentBoard:tmpBoard,
-        tmpBoard:null,
-        isLegal:false,
+        currentBoard: tmpBoard,
+        tmpBoard: null,
+        isLegal: false,
       })
     }
   }
 
   render() {
-    const players = this.state.players&&[...this.state.players];
+    const players = this.state.players && [...this.state.players];
     const selectedPiece = this.state.selectedPiece;
-    const currentBoard = this.state.currentBoard&&[...this.state.currentBoard];
-    const tmpBoard = this.state.tmpBoard&&[...this.state.tmpBoard];
+    const currentBoard = this.state.currentBoard && [...this.state.currentBoard];
+    const tmpBoard = this.state.tmpBoard && [...this.state.tmpBoard];
     const playerItems = players.map(player => {
       return (
         <PlayerItem player={player} selectPiece={this.selectPiece} key={player.playerId}></PlayerItem>
@@ -235,38 +262,39 @@ class Game extends React.Component {
 
 //棋子数据 改为1维数组 降低了代码可观性
 //空的棋盘 参考 http://www.radagast.se/othello/endgame.c
-//9作为边界 0作为棋盘 棋子为1-4
+//9作为边界 0作为棋盘 棋子为1-4 起始位置为5-8
 const EMPTY_BOARD = [
   9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9,
+  9, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8,
   9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-  9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-  9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-  9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-  9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-  9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-  9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-  9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-  9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-  9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-  9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-  9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-  9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-  9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-  9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-  9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-  9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-  9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-  9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-  9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+  9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  9, 6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7,
   9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9
 ];
 //空的棋子
 const EMPTY_PIECE = [
-  0, 0, 0, 0, 0, 
-  0, 0, 0, 0, 0, 
-  0, 0, 0, 0, 0, 
-  0, 0, 0, 0, 0, 
-  0, 0, 0, 0, 0];
+  0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0
+];
 //21种棋子
 const PIECES_DATA = [
   [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
