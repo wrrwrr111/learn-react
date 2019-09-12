@@ -17,22 +17,23 @@ class SquareItem extends React.Component {
 }
 class Board extends React.Component {
   render() {
-    const boardData = this.props.boardData;
+    const currentBoard = this.props.currentBoard;
     const isTemp = this.props.isTemp;
-    const squareItems = boardData.map((row, rowIndex) => {
-      return row.map((col, colIndex) => {
-        if(isTemp){
-          return (
-            <div 
-            className='cel'
-            onMouseEnter={()=>this.props.tryMove(rowIndex,colIndex)}//onMouseLeave
-            key={rowIndex*5+colIndex}>
+    const squareItems = currentBoard.map((square, index) => {
+      //渲染的时候跳过边界
+      if(index<21||index>441||index%21===0) return null;
+      if (isTemp) {
+        return (
+          <div 
+            className={square?`cel cel_${square}`:'cel'}
+            onMouseEnter={()=>this.props.tryMove(index)}//onMouseLeave
+            onClick={()=>this.props.move()}
+            key={index}>
           </div>
-          )
-        }else{
-          return <div className='cel' key={rowIndex*5+colIndex}></div>
-        }
-      })
+        )
+      } else {
+        return <div className={square?`cel cel_${square}`:'cel'} key={index}></div>
+      }
     })
     return (
       <div className='board'>{squareItems}</div>
@@ -45,23 +46,21 @@ class PieceItem extends React.Component {
     const isSelected = this.props.isSelected;
     if (isSelected) {
       //选中时 添加反转和旋转
-      const pieces = piece.pieceData.map((row, rowIndex) => {
-        return row.map((col, colIndex) => {
-          if (rowIndex === 0 && colIndex === 0) {
-            return <div className='cel' onClick={this.props.rotatePiece} key={rowIndex*5+colIndex}>转</div>
-          }
-          if (rowIndex === 0 && colIndex === 4) {
-            return <div className='cel' onClick={this.props.mirrorPiece} key={rowIndex*5+colIndex}>翻</div>
-          }
-          return <div className={col?`cel ${piece.pieceClass}`:'cel'} key={rowIndex*5+colIndex}></div>
-        })
+      const pieces = piece.pieceData.map((square, index) => {
+        let row = parseInt(index / 5)
+        let col = index % 5
+        if (row === 0 && col === 0) {
+          return <div className='cel' onClick={this.props.rotatePiece} key={index}>转</div>
+        }
+        if (row === 0 && col === 4) {
+          return <div className='cel' onClick={this.props.mirrorPiece} key={index}>翻</div>
+        }
+        return <div className={square?`cel cel_${piece.playerIndex}`:'cel'} key={index}></div>
       })
       return <div className={`piece selected_${piece.playerIndex}`}>{pieces}</div>
     } else {
-      const pieces = piece.pieceData.map((row, rowIndex) => {
-        return row.map((col, colIndex) => {
-          return <div className={col?`cel ${piece.pieceClass}`:'cel'} key={rowIndex*5+colIndex}></div>
-        })
+      const pieces = piece.pieceData.map((square, index) => {
+        return <div className={square?`cel cel_${piece.playerIndex}`:'cel'} key={index}></div>
       })
       return <div className='piece' onClick={this.props.selectPiece}>{pieces}</div>
     }
@@ -81,7 +80,7 @@ class PlayerItem extends React.Component {
     })
 
     return (
-      <div className={`player player_${player.index}`}>
+      <div className={`player player_${player.playerIndex}`}>
         {pieceItems}
       </div>
     )
@@ -92,40 +91,19 @@ class Game extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      boardData: [  // 20x20
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-      ],
-      tmpBoard:null,
-      players: ['red', 'yellow', 'blue', 'green'].map((color, index) => {
-        let id = Math.random().toFixed(5) * 100000 + 1; // TODO 
+      currentBoard: [...EMPTY_BOARD],
+      tmpBoard: null,
+      isLegal: false,//当前tryMove时候合法
+      players: [1, 2, 3, 4].map((playerIndex) => {
+        let playerId = Math.random().toFixed(5) * 100000 + 1; // TODO 
         return {
-          index,
-          id,
-          pieces: PIECESDATA.map(pieceData => {
+          playerIndex,
+          playerId,
+          pieces: PIECES_DATA.map(pieceData => {
             return {
-              playerIndex: index,
-              playerId: id,
-              pieceClass: color,
-              pieceData: pieceData
+              playerIndex,
+              playerId,
+              pieceData
             }
           }),
         }
@@ -135,10 +113,11 @@ class Game extends React.Component {
   }
   // 选中棋子 同时生成临时棋盘
   selectPiece = (piece) => {
-    const boardData = this.state.boardData;
+    const currentBoard = [...this.state.currentBoard];
+    console.log(currentBoard)
     this.setState({
       selectedPiece: piece,
-      tmpBoard:boardData,
+      tmpBoard: currentBoard,
     })
   }
   // 逆时针旋转选中棋子
@@ -147,35 +126,30 @@ class Game extends React.Component {
     const C = math.cos(rotation).toFixed();
     const S = math.sin(rotation).toFixed();
     const selectedPiece = this.state.selectedPiece;
-    let rotatedPiece = {...selectedPiece,
-      pieceData: [
-        [0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0]
-      ],
+    let rotatedPiece = {
+      ...selectedPiece,
+      pieceData: [...EMPTY_PIECE],
     };
-    selectedPiece.pieceData.forEach((row, rowIndex) => {
-      row.forEach((col, colIndex) => {
-        if (col) {
-          let [
-            [x],
-            [y],
-            // eslint-disable-next-line
-            [z]
-          ] = math.multiply([
-            [C, -S, (1 - C) * 2 + S * 2],
-            [S, C, (1 - C) * 2 - S * 2],
-            [0, 0, 1]
-          ], [
-            [rowIndex],
-            [colIndex],
-            [1]
-          ])
-          rotatedPiece.pieceData[x][y] = selectedPiece.playerId
-        }
-      })
+    selectedPiece.pieceData.forEach((square, squareIndex) => {
+      let row = parseInt(squareIndex / 5)
+      let col = squareIndex % 5
+      if (square) {
+        let [
+          [x],
+          [y],
+          // eslint-disable-next-line
+          [z]
+        ] = math.multiply([
+          [C, -S, (1 - C) * 2 + S * 2],
+          [S, C, (1 - C) * 2 - S * 2],
+          [0, 0, 1]
+        ], [
+          [row],
+          [col],
+          [1]
+        ])
+        rotatedPiece.pieceData[x * 5 + y] = selectedPiece.playerId
+      }
     })
     this.setState({
       selectedPiece: rotatedPiece
@@ -184,207 +158,139 @@ class Game extends React.Component {
   // 上下翻转选中棋子
   mirrorPiece = (piece) => {
     const selectedPiece = this.state.selectedPiece;
-    let rotatedPiece = {...selectedPiece,
-      pieceData: [
-        [0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0]
-      ],
+    let rotatedPiece = {
+      ...selectedPiece,
+      pieceData: [...EMPTY_PIECE],
     };
-    selectedPiece.pieceData.forEach((row, rowIndex) => {
-      row.forEach((col, colIndex) => {
-        if (col) {
-          let x = 4 - rowIndex;
-          let y = colIndex;
-          rotatedPiece.pieceData[x][y] = selectedPiece.playerId
-        }
-      })
+    selectedPiece.pieceData.forEach((square, squareIndex) => {
+      let row = parseInt(squareIndex / 5)
+      let col = squareIndex % 5
+      if (square) {
+        let x = 4 - row;
+        let y = col;
+        rotatedPiece.pieceData[x * 5 + y] = selectedPiece.playerId
+      }
     })
     this.setState({
       selectedPiece: rotatedPiece
     })
   }
-  // 在临时棋盘上移动棋子
-  tryMove = (x, y) => {
+  // 在临时棋盘上移动棋子 有个备份棋子 超出范围择撤销
+  tryMove = (tryIndex) => {
     const selectedPiece = this.state.selectedPiece;
-    console.log(x, y)
+    const tryX = parseInt((tryIndex-21)/21);
+    const tryY = tryIndex%21-1;
+    let isLegal = true;
+    let tmpBoard = [...this.state.currentBoard];
+    selectedPiece.pieceData.forEach((square,squareIndex) => {
+      if (square) {
+        const movedX = tryX + parseInt(squareIndex / 5) -2;
+        const movedY = tryY + squareIndex % 5 -2;
+        const movedIndex = 22+movedX*21+movedY;
+        if(tmpBoard[movedIndex] === 9){//判断边界 TODO: 判断其他规则
+          isLegal = false;
+        }
+        tmpBoard[movedIndex] = selectedPiece.playerIndex;
+      }
+    })
+    if(isLegal){//落子合法才显示
+      this.setState({
+        tmpBoard,
+        isLegal,
+      })
+    }
   }
-  
-  // 返回选中棋子平移 x, y后 棋子个点坐标
-  translatePiece = (x,y) =>{
-    const selectedPiece = this.state.selectedPiece;
+  // 落子
+  move = () =>{
+    const isLegal = this.state.isLegal;
+    const tmpBoard = [...this.state.tmpBoard];
+    //TODO 移除对应棋子
+    if(isLegal){
+      this.setState({
+        currentBoard:tmpBoard,
+        tmpBoard:null,
+        isLegal:false,
+      })
+    }
   }
+
   render() {
-    const players = this.state.players;
+    const players = this.state.players&&[...this.state.players];
     const selectedPiece = this.state.selectedPiece;
-    const boardData = this.state.boardData;
-    const tmpBoard = this.state.tmpBoard
+    const currentBoard = this.state.currentBoard&&[...this.state.currentBoard];
+    const tmpBoard = this.state.tmpBoard&&[...this.state.tmpBoard];
     const playerItems = players.map(player => {
       return (
-        <PlayerItem player={player} selectPiece={this.selectPiece} key={player.id}></PlayerItem>
+        <PlayerItem player={player} selectPiece={this.selectPiece} key={player.playerId}></PlayerItem>
       )
     })
     return (
       <div className='square'>
         {playerItems}
         {selectedPiece && <PieceItem piece={selectedPiece} isSelected={true} rotatePiece={this.rotatePiece} mirrorPiece={this.mirrorPiece}></PieceItem>}
-        <Board boardData={tmpBoard||boardData} isTemp={Boolean(tmpBoard)} tryMove={this.tryMove}></Board>
+        <Board currentBoard={tmpBoard||currentBoard} isTemp={Boolean(tmpBoard)} tryMove={this.tryMove} move={this.move}></Board>
       </div>
     )
   }
 }
 
-//棋子数据
-const PIECESDATA = [
-  [
-    [0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0],
-    [0, 0, 1, 0, 0],
-    [0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0]
-  ],
-  [
-    [0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0],
-    [0, 1, 1, 0, 0],
-    [0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0]
-  ],
-  [
-    [0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0],
-    [0, 1, 1, 1, 0],
-    [0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0]
-  ],
-  [
-    [0, 0, 0, 0, 0],
-    [0, 0, 1, 0, 0],
-    [0, 0, 1, 1, 0],
-    [0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0]
-  ],
-  [
-    [0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0],
-    [1, 1, 1, 1, 0],
-    [0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0]
-  ],
-  [
-    [0, 0, 0, 0, 0],
-    [0, 1, 0, 0, 0],
-    [0, 1, 1, 1, 0],
-    [0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0]
-  ],
-  [
-    [0, 0, 0, 0, 0],
-    [0, 0, 1, 0, 0],
-    [0, 1, 1, 1, 0],
-    [0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0]
-  ],
-  [
-    [0, 0, 0, 0, 0],
-    [0, 0, 1, 1, 0],
-    [0, 1, 1, 0, 0],
-    [0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0]
-  ],
-  [
-    [0, 0, 0, 0, 0],
-    [0, 1, 1, 0, 0],
-    [0, 1, 1, 0, 0],
-    [0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0]
-  ],
-  [
-    [0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0],
-    [1, 1, 1, 1, 1],
-    [0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0]
-  ],
-  [
-    [0, 0, 0, 0, 0],
-    [0, 1, 0, 0, 0],
-    [0, 1, 1, 1, 1],
-    [0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0]
-  ],
-  [
-    [0, 0, 0, 0, 0],
-    [0, 0, 1, 0, 0],
-    [0, 1, 1, 1, 1],
-    [0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0]
-  ],
-  [
-    [0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0],
-    [0, 0, 1, 1, 1],
-    [0, 1, 1, 0, 0],
-    [0, 0, 0, 0, 0]
-  ],
-  [
-    [0, 0, 0, 0, 0],
-    [0, 1, 1, 0, 0],
-    [0, 1, 1, 1, 0],
-    [0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0]
-  ],
-  [
-    [0, 0, 0, 0, 0],
-    [0, 1, 0, 1, 0],
-    [0, 1, 1, 1, 0],
-    [0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0]
-  ],
-  [
-    [0, 0, 0, 0, 0],
-    [0, 0, 1, 0, 0],
-    [0, 1, 1, 1, 0],
-    [0, 1, 0, 0, 0],
-    [0, 0, 0, 0, 0]
-  ],
-  [
-    [0, 0, 0, 0, 0],
-    [0, 0, 1, 1, 0],
-    [0, 0, 1, 0, 0],
-    [0, 1, 1, 0, 0],
-    [0, 0, 0, 0, 0]
-  ],
-  [
-    [0, 0, 0, 0, 0],
-    [0, 1, 0, 0, 0],
-    [0, 1, 0, 0, 0],
-    [0, 1, 1, 1, 0],
-    [0, 0, 0, 0, 0]
-  ],
-  [
-    [0, 0, 0, 0, 0],
-    [0, 0, 1, 0, 0],
-    [0, 0, 1, 0, 0],
-    [0, 1, 1, 1, 0],
-    [0, 0, 0, 0, 0]
-  ],
-  [
-    [0, 0, 0, 0, 0],
-    [0, 0, 1, 0, 0],
-    [0, 1, 1, 1, 0],
-    [0, 0, 1, 0, 0],
-    [0, 0, 0, 0, 0]
-  ],
-  [
-    [0, 0, 0, 0, 0],
-    [0, 1, 0, 0, 0],
-    [0, 1, 1, 0, 0],
-    [0, 0, 1, 1, 0],
-    [0, 0, 0, 0, 0]
-  ]
+//棋子数据 改为1维数组 降低了代码可观性
+//空的棋盘 参考 http://www.radagast.se/othello/endgame.c
+//9作为边界 0作为棋盘 棋子为1-4
+const EMPTY_BOARD = [
+  9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9,
+  9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+  9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+  9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+  9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+  9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+  9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+  9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+  9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+  9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+  9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+  9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+  9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+  9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+  9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+  9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+  9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+  9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+  9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+  9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+  9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9
+];
+//空的棋子
+const EMPTY_PIECE = [
+  0, 0, 0, 0, 0, 
+  0, 0, 0, 0, 0, 
+  0, 0, 0, 0, 0, 
+  0, 0, 0, 0, 0, 
+  0, 0, 0, 0, 0];
+//21种棋子
+const PIECES_DATA = [
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0]
 ]
 
 export default App;

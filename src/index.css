@@ -78,40 +78,40 @@ p {
   grid-gap: 0.5vmin;
 }
 
-.player_0 {
+.player_1 {
   grid-area: g2;
   grid-template-columns: repeat(7, 7vmin);
   grid-template-rows: repeat(3, 7vmin);
 }
 
-.player_1 {
+.player_2 {
   grid-area: g4;
   grid-template-columns: repeat(3, 7vmin);
   grid-template-rows: repeat(7, 7vmin);
 }
 
-.player_2 {
+.player_3 {
   grid-area: g8;
   grid-template-columns: repeat(7, 7vmin);
   grid-template-rows: repeat(3, 7vmin);
 }
 
-.player_3 {
+.player_4 {
   grid-area: g6;
   grid-template-columns: repeat(3, 7vmin);
   grid-template-rows: repeat(7, 7vmin);
 }
 
-.selected_0 {
+.selected_1 {
   grid-area: g1;
 }
-.selected_1 {
+.selected_2 {
   grid-area: g7;
 }
-.selected_2 {
+.selected_3 {
   grid-area: g9;
 }
-.selected_3 {
+.selected_4 {
   grid-area: g3;
 }
 .piece {
@@ -131,18 +131,18 @@ p {
   display: none;
 }
 
-.red {
+.cel_1 {
   background-color: #FF0000;
 }
 
-.yellow {
+.cel_2 {
   background-color: #FFaa00;
 }
 
-.blue {
+.cel_3 {
   background-color: #009999;
 }
 
-.green {
+.cel_4 {
   background-color: #00cc00;
 }
