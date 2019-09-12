@@ -114,7 +114,6 @@ class Game extends React.Component {
   // 选中棋子 同时生成临时棋盘
   selectPiece = (piece) => {
     const currentBoard = [...this.state.currentBoard];
-    console.log(currentBoard)
     this.setState({
       selectedPiece: piece,
       tmpBoard: currentBoard,
