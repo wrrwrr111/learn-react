@@ -1,6 +1,8 @@
 import React from 'react';
 import './App.css';
-import math from 'mathjs/dist/math.js'
+import math from 'mathjs/dist/math.js';
+import ColorHash from 'color-hash'; // 根据字符串生成颜色
+const colorHash = new ColorHash();
 
 function App() {
   return (
@@ -25,14 +27,15 @@ class Board extends React.Component {
       if (isTemp) {
         return (
           <div 
-            className={square?`cel cel_${square}`:'cel'}
+            className='cel'
+            style={square?{backgroundColor:colorHash.hex(square)}:null}
             onMouseEnter={()=>this.props.tryMove(index)}//onMouseLeave
             onClick={()=>this.props.move()}
             key={index}>
           </div>
         )
       } else {
-        return <div className={square?`cel cel_${square}`:'cel'} key={index}></div>
+        return <div className='cel' style={square?{backgroundColor:colorHash.hex(square)}:null} key={index}></div>
       }
     })
     return (
@@ -55,12 +58,12 @@ class PieceItem extends React.Component {
         if (row === 0 && col === 4) {
           return <div className='cel' onClick={this.props.mirrorPiece} key={index}>翻</div>
         }
-        return <div className={square?`cel cel_${piece.playerIndex}`:'cel'} key={index}></div>
+        return <div className='cel' style={square?piece.pieceStyle:null} key={index}></div>
       })
-      return <div className={`piece selected_${piece.playerIndex}`}>{pieces}</div>
+      return <div className={'piece selected'}>{pieces}</div>
     } else {
       const pieces = piece.pieceData.map((square, index) => {
-        return <div className={square?`cel cel_${piece.playerIndex}`:'cel'} key={index}></div>
+        return <div className='cel' style={square?piece.pieceStyle:null} key={index}></div>
       })
       return <div className='piece' onClick={this.props.selectPiece}>{pieces}</div>
     }
@@ -80,7 +83,7 @@ class PlayerItem extends React.Component {
     })
 
     return (
-      <div className={`player player_${player.playerIndex}`}>
+      <div className={'player'}>
         {pieceItems}
       </div>
     )
@@ -96,14 +99,16 @@ class Game extends React.Component {
       isLegal: false, //当前tryMove时候合法
       players: [1, 2, 3, 4].map((playerIndex) => {
         let playerId = Math.random().toFixed(5) * 100000 + 1; // TODO 
+        let backgroundColor = colorHash.hex(playerId);  // 生成随机颜色 TODO 可能会很接近
         return {
-          playerIndex,
           playerId,
           pieces: PIECES_DATA.map(pieceData => {
             return {
-              playerIndex,
               playerId,
-              pieceData
+              pieceData,
+              pieceStyle:{
+                backgroundColor,
+              }
             }
           }),
         }
@@ -195,31 +200,31 @@ class Game extends React.Component {
         if (
           currentBoard[movedIndex] === 9
         ) { // 判断边界 
-          rule.inRange = false;
+          rule.range = false;
         } else if (
-          currentBoard[movedIndex] === selectedPiece.playerIndex + 4
+          currentBoard[movedIndex] === null
         ) { // 判断是否第一个
           rule.first = true;
         } else if (
-          currentBoard[movedIndex - 1] === selectedPiece.playerIndex ||
-          currentBoard[movedIndex + 1] === selectedPiece.playerIndex ||
-          currentBoard[movedIndex - 21] === selectedPiece.playerIndex ||
-          currentBoard[movedIndex + 21] === selectedPiece.playerIndex
-        ) { // 判断是否同色边对边
-          rule.side = false;
-        } else if (
-          currentBoard[movedIndex - 20] === selectedPiece.playerIndex ||
-          currentBoard[movedIndex - 22] === selectedPiece.playerIndex ||
-          currentBoard[movedIndex + 20] === selectedPiece.playerIndex ||
-          currentBoard[movedIndex + 22] === selectedPiece.playerIndex
-        ) { // 判断是否同色角对角
-          rule.angle = true;
-        }
-        tmpBoard[movedIndex] = selectedPiece.playerIndex;
+          currentBoard[movedIndex - 1] === selectedPiece.playerId ||
+          currentBoard[movedIndex + 1] === selectedPiece.playerId ||
+          currentBoard[movedIndex - 21] === selectedPiece.playerId ||
+          currentBoard[movedIndex + 21] === selectedPiece.playerId
+          ) { // 判断是否同色边对边
+            rule.side = false;
+          } else if (
+            currentBoard[movedIndex - 20] === selectedPiece.playerId ||
+          currentBoard[movedIndex - 22] === selectedPiece.playerId ||
+          currentBoard[movedIndex + 20] === selectedPiece.playerId ||
+          currentBoard[movedIndex + 22] === selectedPiece.playerId
+          ) { // 判断是否同色角对角
+            rule.angle = true;
+          }
+        tmpBoard[movedIndex] = selectedPiece.playerId;
       }
     })
     let isLegal = rule.range && (rule.first || (rule.side && rule.angle))
-    if (isLegal) { //落子合法才显示
+    if (true) { // TODO 落子合法才显示 目前都显示
       this.setState({
         tmpBoard,
         isLegal: isLegal,
@@ -229,7 +234,9 @@ class Game extends React.Component {
   // 落子
   move = () => {
     const isLegal = this.state.isLegal;
+    const selectedPiece = this.state.selectedPiece;
     const tmpBoard = [...this.state.tmpBoard];
+    console.log(selectedPiece,isLegal)
     //TODO 移除对应棋子
     if (isLegal) {
       this.setState({
@@ -262,10 +269,9 @@ class Game extends React.Component {
 
 //棋子数据 改为1维数组 降低了代码可观性
 //空的棋盘 参考 http://www.radagast.se/othello/endgame.c
-//9作为边界 0作为棋盘 棋子为1-4 起始位置为5-8
+//9作为边界 0作为棋盘 棋子为1-4 
 const EMPTY_BOARD = [
   9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9,
-  9, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8,
   9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
   9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
   9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -284,7 +290,8 @@ const EMPTY_BOARD = [
   9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
   9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
   9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-  9, 6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7,
+  9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
   9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9
 ];
 //空的棋子
